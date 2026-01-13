@@ -9,6 +9,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^3.0.5",
+    "@ai-sdk/openai": "^3.0.7",
     "@hookform/resolvers": "^3.10.0",
     "@neondatabase/serverless": "1.0.2",
     "@radix-ui/react-accordion": "1.2.2",

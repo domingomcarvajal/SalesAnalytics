@@ -4,81 +4,137 @@ import { sql } from "@/lib/db"
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const industry = searchParams.get("industry")
-    const salesperson = searchParams.get("salesperson")
-    const dealStatus = searchParams.get("dealStatus")
+    const salesperson = searchParams.get("salesperson") || "all"
+    const closed = searchParams.get("closed") || "all"
+    const industryId = searchParams.get("industryId") || "all"
 
-    const whereConditions = []
-    const params: any = {}
+    // Convert closed filter to boolean or null
+    const closedFilter = closed === "all" ? null : closed === "Won"
+    // Convert industryId to number or null
+    const industryIdFilter = industryId === "all" ? null : parseInt(industryId, 10)
 
-    if (industry && industry !== "all") {
-      whereConditions.push("m.industry = " + sql`${industry}`)
-    }
-    if (salesperson && salesperson !== "all") {
-      whereConditions.push("m.salesperson = " + sql`${salesperson}`)
-    }
-    if (dealStatus && dealStatus !== "all") {
-      whereConditions.push("m.deal_status = " + sql`${dealStatus}`)
-    }
-
-    const whereClause = whereConditions.length > 0 ? "WHERE " + whereConditions.join(" AND ") : ""
-
+    // Total meetings count
     const totalMeetings = await sql`
       SELECT COUNT(*) as count
       FROM meetings m
-      ${whereClause ? sql.unsafe(whereClause) : sql``}
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
     `
 
+    // Conversion rate
     const conversionRate = await sql`
       SELECT 
-        COUNT(CASE WHEN deal_status = 'Won' THEN 1 END) as won,
+        COUNT(CASE WHEN closed = true THEN 1 END) as won,
         COUNT(*) as total
       FROM meetings m
-      ${whereClause ? sql.unsafe(whereClause) : sql``}
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
     `
 
-    const avgDealValue = await sql`
-      SELECT AVG(deal_value) as avg_value
+    // Salesperson stats: total, closed, and percentage
+    const salespersonStats = await sql`
+      SELECT 
+        sales_person,
+        COUNT(*) as total,
+        COUNT(CASE WHEN closed = true THEN 1 END) as closed,
+        ROUND(
+          CASE 
+            WHEN COUNT(*) > 0 
+            THEN (COUNT(CASE WHEN closed = true THEN 1 END)::numeric / COUNT(*)::numeric) * 100
+            ELSE 0 
+          END, 
+          1
+        ) as close_rate
       FROM meetings m
-      WHERE deal_value IS NOT NULL
-      ${whereClause ? sql.unsafe("AND " + whereClause.replace("WHERE ", "")) : sql``}
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
+      GROUP BY sales_person
+      ORDER BY total DESC
     `
 
-    const topPainPoints = await sql`
-      SELECT pp.pain_point, pp.category, pp.priority, COUNT(*) as frequency
-      FROM pain_points pp
-      JOIN meetings m ON pp.meeting_id = m.id
-      ${whereClause ? sql.unsafe(whereClause) : sql``}
-      GROUP BY pp.pain_point, pp.category, pp.priority
-      ORDER BY frequency DESC
-      LIMIT 10
-    `
-
-    const topObjections = await sql`
-      SELECT o.objection, o.objection_type, COUNT(*) as frequency
-      FROM objections o
-      JOIN meetings m ON o.meeting_id = m.id
-      ${whereClause ? sql.unsafe(whereClause) : sql``}
-      GROUP BY o.objection, o.objection_type
-      ORDER BY frequency DESC
-      LIMIT 10
-    `
-
-    const competitorData = await sql`
-      SELECT cm.competitor_name, COUNT(*) as mentions, cm.sentiment
-      FROM competitive_mentions cm
-      JOIN meetings m ON cm.meeting_id = m.id
-      ${whereClause ? sql.unsafe(whereClause) : sql``}
-      GROUP BY cm.competitor_name, cm.sentiment
-      ORDER BY mentions DESC
-      LIMIT 10
-    `
-
-    const industryBreakdown = await sql`
-      SELECT industry, COUNT(*) as count
+    // Industry stats: total, closed, and percentage
+    const industryStats = await sql`
+      SELECT 
+        COALESCE(i.name, 'sin_asignar') as industry,
+        COUNT(*) as total,
+        COUNT(CASE WHEN m.closed = true THEN 1 END) as closed,
+        ROUND(
+          CASE 
+            WHEN COUNT(*) > 0 
+            THEN (COUNT(CASE WHEN m.closed = true THEN 1 END)::numeric / COUNT(*)::numeric) * 100
+            ELSE 0 
+          END, 
+          1
+        ) as close_rate
       FROM meetings m
-      ${whereClause ? sql.unsafe(whereClause) : sql``}
-      GROUP BY industry
+      LEFT JOIN industries i ON m.industry_id = i.id
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
+      GROUP BY i.name
+      ORDER BY total DESC
+    `
+
+    // Pain points by category
+    const painPointsByCategory = await sql`
+      SELECT 
+        ppc.name as category,
+        COUNT(*) as count
+      FROM meeting_pain_points mpp
+      JOIN pain_point_categories ppc ON mpp.pain_point_id = ppc.id
+      JOIN meetings m ON mpp.meeting_id = m.id
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
+      GROUP BY ppc.name
+      ORDER BY count DESC
+    `
+
+    // Discovery triggers
+    const triggerStats = await sql`
+      SELECT 
+        dtc.name as trigger,
+        COUNT(*) as count
+      FROM meeting_discovery_triggers mdt
+      JOIN discovery_trigger_categories dtc ON mdt.trigger_id = dtc.id
+      JOIN meetings m ON mdt.meeting_id = m.id
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
+      GROUP BY dtc.name
+      ORDER BY count DESC
+    `
+
+    // Objectives
+    const objectiveStats = await sql`
+      SELECT 
+        oc.name as objective,
+        COUNT(*) as count
+      FROM meeting_objectives mo
+      JOIN objective_categories oc ON mo.objective_id = oc.id
+      JOIN meetings m ON mo.meeting_id = m.id
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
+      GROUP BY oc.name
+      ORDER BY count DESC
+    `
+
+    // Technical requirements
+    const requirementStats = await sql`
+      SELECT 
+        trc.name as requirement,
+        COUNT(*) as count
+      FROM meeting_technical_requirements mtr
+      JOIN technical_requirement_categories trc ON mtr.requirement_id = trc.id
+      JOIN meetings m ON mtr.meeting_id = m.id
+      WHERE (${salesperson} = 'all' OR m.sales_person = ${salesperson})
+        AND (${closedFilter}::boolean IS NULL OR m.closed = ${closedFilter})
+        AND (${industryIdFilter}::integer IS NULL OR m.industry_id = ${industryIdFilter})
+      GROUP BY trc.name
       ORDER BY count DESC
     `
 
@@ -86,11 +142,13 @@ export async function GET(request: NextRequest) {
       totalMeetings: Number.parseInt(totalMeetings[0].count),
       conversionRate:
         conversionRate[0].total > 0 ? ((conversionRate[0].won / conversionRate[0].total) * 100).toFixed(2) : 0,
-      avgDealValue: avgDealValue[0].avg_value || 0,
-      topPainPoints,
-      topObjections,
-      competitorData,
-      industryBreakdown,
+      totalClosed: Number(conversionRate[0].won),
+      salespersonStats,
+      industryStats,
+      painPointsByCategory,
+      triggerStats,
+      objectiveStats,
+      requirementStats,
     })
   } catch (error) {
     console.error("[v0] Analytics error:", error)

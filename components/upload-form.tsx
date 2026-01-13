@@ -38,7 +38,7 @@ export function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void
     if (droppedFile && droppedFile.type === "text/csv") {
       handleFileChange(droppedFile)
     } else {
-      setMessage({ type: "error", text: "Please upload a CSV file" })
+      setMessage({ type: "error", text: "Por favor sube un archivo CSV" })
     }
   }
 
@@ -46,7 +46,7 @@ export function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void
     e.preventDefault()
 
     if (!file) {
-      setMessage({ type: "error", text: "Please select a file" })
+      setMessage({ type: "error", text: "Por favor selecciona un archivo" })
       return
     }
 
@@ -72,10 +72,10 @@ export function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void
         }
         onUploadComplete?.()
       } else {
-        setMessage({ type: "error", text: data.error || "Upload failed" })
+        setMessage({ type: "error", text: data.error || "Falló la subida" })
       }
     } catch (error) {
-      setMessage({ type: "error", text: "An error occurred during upload" })
+      setMessage({ type: "error", text: "Ocurrió un error durante la subida" })
     } finally {
       setUploading(false)
     }
@@ -84,10 +84,10 @@ export function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upload Meeting Data</CardTitle>
+        <CardTitle>Subir Datos de las Reuniones de Ventas</CardTitle>
         <CardDescription>
-          Upload a CSV file with meeting transcripts. Expected format: client_name, client_email, client_phone_number,
-          meeting_date, sales_person, closed (0 or 1), transcript
+          Sube un archivo CSV con las transcripciones de las reuniones de ventas. El formato esperado es: client_name, client_email, client_phone_number,
+          meeting_date, sales_person, closed (0 o 1), transcript.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -112,8 +112,8 @@ export function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void
               ) : (
                 <>
                   <Upload className="h-12 w-12 text-muted-foreground" />
-                  <p className="text-sm font-medium">Drag and drop your CSV file here</p>
-                  <p className="text-xs text-muted-foreground">or click to browse</p>
+                  <p className="text-sm font-medium">Arrastra y suelta tu archivo CSV aquí</p>
+                  <p className="text-xs text-muted-foreground">o haz clic para navegar</p>
                 </>
               )}
             </div>
@@ -143,7 +143,7 @@ export function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void
           )}
 
           <Button type="submit" disabled={!file || uploading} className="w-full">
-            {uploading ? "Uploading..." : "Upload CSV"}
+            {uploading ? "Subiendo..." : "Subir CSV"}
           </Button>
         </form>
       </CardContent>

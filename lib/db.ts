@@ -8,12 +8,13 @@ export const sql = neon(process.env.DATABASE_URL)
 
 export type Meeting = {
   id: number
-  meeting_date: string
   client_name: string
-  salesperson: string
-  industry: string
-  deal_status: "Won" | "Lost" | "In Progress"
-  deal_value: number | null
+  client_email: string | null
+  client_phone_number: string | null
+  meeting_date: string
+  sales_person: string
+  closed: boolean
+  transcript: string | null
   uploaded_at: string
   processed: boolean
 }

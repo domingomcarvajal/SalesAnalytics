@@ -6,25 +6,25 @@ import { Upload, Sparkles } from "lucide-react"
 export default function Home() {
   return (
     <div className="container mx-auto py-8">
-      <div className="flex flex-col gap-4 mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Sales Meeting Analytics</h1>
           <p className="text-muted-foreground mt-2">
-            AI-powered insights from your sales conversations with the Vambe team
+            Insights de las conversaciones de ventas con el equipo de Vambe
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <Button asChild>
+        <div className="flex gap-2">
+          <Button asChild size="sm" className="h-9">
             <Link href="/upload">
               <Upload className="mr-2 h-4 w-4" />
-              Upload Data
+              Ingresar Datos
             </Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" size="sm" className="h-9">
             <Link href="/process">
               <Sparkles className="mr-2 h-4 w-4" />
-              Process Transcripts
+              Procesar Transcripciones
             </Link>
           </Button>
         </div>

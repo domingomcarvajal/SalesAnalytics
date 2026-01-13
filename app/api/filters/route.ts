@@ -3,28 +3,29 @@ import { sql } from "@/lib/db"
 
 export async function GET() {
   try {
-    const industries = await sql`
-      SELECT DISTINCT industry
-      FROM meetings
-      ORDER BY industry
-    `
-
     const salespeople = await sql`
-      SELECT DISTINCT salesperson
+      SELECT DISTINCT sales_person
       FROM meetings
-      ORDER BY salesperson
+      ORDER BY sales_person
     `
 
-    const dealStatuses = await sql`
-      SELECT DISTINCT deal_status
+    const closedStatuses = await sql`
+      SELECT DISTINCT closed
       FROM meetings
-      ORDER BY deal_status
+      ORDER BY closed
+    `
+
+    // Fetch industries from the industries table
+    const industries = await sql`
+      SELECT id, name
+      FROM industries
+      ORDER BY name
     `
 
     return NextResponse.json({
-      industries: industries.map((i) => i.industry),
-      salespeople: salespeople.map((s) => s.salesperson),
-      dealStatuses: dealStatuses.map((d) => d.deal_status),
+      salespeople: salespeople.map((s) => s.sales_person),
+      closedStatuses: closedStatuses.map((c) => c.closed ? "Won" : "Open"),
+      industries: industries.map((i) => ({ id: i.id, name: i.name })),
     })
   } catch (error) {
     console.error("[v0] Filters error:", error)
