@@ -21,7 +21,7 @@ export function PercentageBarChart({
   dataKey,
   categoryKey,
   color,
-  height = 180,
+  height = 220,
 }: PercentageBarChartProps) {
   return (
     <Card>
@@ -45,8 +45,9 @@ export function PercentageBarChart({
               <YAxis
                 dataKey={categoryKey}
                 type="category"
-                width={100}
-                tick={{ fontSize: 10 }}
+                width={160}
+                tick={{ fontSize: 11 }}
+                interval={0}
               />
               <Tooltip formatter={(value) => [`${value}%`, title]} />
               <Bar dataKey={dataKey} fill={color} radius={[0, 4, 4, 0]} />
