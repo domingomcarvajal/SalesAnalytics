@@ -26,6 +26,8 @@ La aplicación espera archivos CSV con las siguientes columnas:
 - `closed` (0 o 1, se convertirá a booleano)
 - `transcript` (string)
 
+**Importante:** El archivo CSV debe estar separado por el carácter `;` (punto y coma) para evitar problemas de formato.
+
 ### Ejecutar Localmente
 
 Instala las dependencias e inicia el servidor de desarrollo:
