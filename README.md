@@ -1,23 +1,22 @@
-# Sales meeting analysis
+# KampAI
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+**Aplicación web de análisis de reuniones de ventas con IA**
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/domingomcarvajal-3004s-projects/v0-sales-meeting-analysis)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/dWlkSEPFWQD)
+La aplicación se encuentra desplegada en: https://v0-sales-meeting-analysis.vercel.app/
 
-## Overview
+## Configuración de Desarrollo Local
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+### Prerrequisitos
 
-## Deployment
+- Node.js 20+ instalado
 
-Your project is live at:
+### Configuración del Entorno
 
-**[https://vercel.com/domingomcarvajal-3004s-projects/v0-sales-meeting-analysis](https://vercel.com/domingomcarvajal-3004s-projects/v0-sales-meeting-analysis)**
+Por simplicidad, el archivo `.env.local` con toda la configuración necesaria (URL de base de datos y claves de API) será proporcionado. No se requiere configuración adicional.
 
-## Build your app
+### Formato CSV
 
+<<<<<<< Updated upstream
 Continue building your app on:
 
 **[https://v0.app/chat/dWlkSEPFWQD](https://v0.app/chat/dWlkSEPFWQD)**
@@ -60,26 +59,47 @@ You can run these directly from the v0 interface or using a Neon SQL client.
 ### CSV Format
 
 The application expects CSV files with the following columns:
+=======
+La aplicación espera archivos CSV con las siguientes columnas:
+>>>>>>> Stashed changes
 
 - `client_name` (string)
 - `client_email` (string)
 - `client_phone_number` (string)
-- `meeting_date` (string, will be converted to date)
+- `meeting_date` (string, se convertirá a fecha)
 - `sales_person` (string)
-- `closed` (0 or 1, will be converted to boolean)
+- `closed` (0 o 1, se convertirá a booleano)
 - `transcript` (string)
 
-### Running Locally
+### Ejecutar Localmente
 
+Instala las dependencias e inicia el servidor de desarrollo:
+
+<<<<<<< Updated upstream
 \`\`\`bash
 npm install
 npm run dev
 \`\`\`
+=======
+```bash
+# Usando npm
+npm install
+npm run dev
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+# O usando yarn
+yarn install
+yarn dev
 
-### Application Flow
+# O usando pnpm
+pnpm install
+pnpm dev
+```
+>>>>>>> Stashed changes
 
-1. **Upload** (`/upload`) - Upload CSV files with meeting data
-2. **Process** (`/process`) - Run AI analysis on transcripts to extract insights
-3. **Dashboard** (`/`) - View analytics with filters and visualizations
+Abre [http://localhost:3000](http://localhost:3000) para ver la aplicación.
+
+### Flujo de la Aplicación
+
+1. **Subir Datos** (`/upload`) - Sube archivos CSV con datos de reuniones
+2. **Procesar** (`/process`) - Ejecuta análisis de IA en las transcripciones usando Groq para extraer insights
+3. **Dashboard** (`/`) - Visualiza analytics con filtros e visualizaciones
