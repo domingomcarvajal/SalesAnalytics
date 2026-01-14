@@ -8,7 +8,22 @@ La aplicación se encuentra desplegada en: https://v0-sales-meeting-analysis.ver
 
 ### Prerrequisitos
 
-- Node.js 20+ instalado
+- Node.js 20.9.0 o superior instalado
+
+#### Instalación de Node.js con nvm
+
+Si usas nvm para manejar versiones de Node.js:
+
+```bash
+# Instalar Node.js 20.9.0
+nvm install 20.9.0
+
+# Usar Node.js 20.9.0
+nvm use 20.9.0
+
+# Verificar la versión instalada
+node --version
+```
 
 ### Configuración del Entorno
 
