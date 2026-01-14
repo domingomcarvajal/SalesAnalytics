@@ -8,7 +8,7 @@ export default function Home() {
     <div className="container mx-auto py-8">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Sales Meeting Analytics</h1>
+          <h1 className="text-4xl font-bold tracking-tight">KampAI🍾</h1>
           <p className="text-muted-foreground mt-2">
             Insights de las conversaciones de ventas con el equipo de Vambe
           </p>

@@ -33,6 +33,7 @@ export function ProcessTranscripts({ onProcessComplete }: { onProcessComplete?: 
       const response = await fetch("/api/process-transcripts")
       const data = await response.json()
       setStats(data)
+      console.log('debug stats', data)
     } catch (error) {
       console.error("Failed to fetch stats:", error)
     } finally {
@@ -65,19 +66,6 @@ export function ProcessTranscripts({ onProcessComplete }: { onProcessComplete?: 
     }
   }
 
-  const CategorySection = ({ title, items }: { title: string; items?: CategoryItem[] }) => (
-    <div className="space-y-1.5">
-      <div className="text-xs font-medium text-muted-foreground">{title}</div>
-      <div className="flex flex-wrap gap-1">
-        {items?.map((item) => (
-          <Badge key={item.id} variant="outline" className="text-xs font-normal">
-            {item.name}
-          </Badge>
-        ))}
-      </div>
-    </div>
-  )
-
   return (
     <Card>
       <CardHeader>
@@ -102,20 +90,6 @@ export function ProcessTranscripts({ onProcessComplete }: { onProcessComplete?: 
             )}
           </div>
         </div>
-
-        {/* Categories sections */}
-        {!loading && stats && (
-          <div className="space-y-3 p-4 rounded-lg border bg-card">
-            <div className="text-sm font-medium">Categorías disponibles para extracción:</div>
-            <div className="grid gap-3">
-              <CategorySection title="Industrias" items={stats.industries} />
-              <CategorySection title="Dolores Principales" items={stats.painPoints} />
-              <CategorySection title="Triggers de Descubrimiento" items={stats.triggers} />
-              <CategorySection title="Objetivos Principales" items={stats.objectives} />
-              <CategorySection title="Requerimientos Técnicos" items={stats.requirements} />
-            </div>
-          </div>
-        )}
 
         {message && (
           <div

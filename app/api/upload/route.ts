@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { parseCSVLine, processMeetingsUpload } from "./controller"
+import { InsertMeetingData } from "@/types/meeting"
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,8 +26,7 @@ export async function POST(request: NextRequest) {
     console.log("[Upload] Parsed headers:", headers)
     console.log("[Upload] Number of headers:", headers.length)
 
-    let uploadedCount = 0
-    let skippedCount = 0
+    const meetingsToProcess: InsertMeetingData[] = []
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim()
@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
 
       if (values.length !== headers.length) {
         console.log(`[Upload] Line ${i}: Skipping - column count mismatch (${values.length} vs ${headers.length})`)
-        skippedCount++
         continue
       }
 
@@ -57,36 +56,25 @@ export async function POST(request: NextRequest) {
         transcript: transcript ? transcript.substring(0, 50) + "..." : null
       })
 
-      if (!client_name || !meeting_date || !sales_person) {
-        console.log(`[Upload] Line ${i}: Skipping - missing required fields (client_name: ${!!client_name}, meeting_date: ${!!meeting_date}, sales_person: ${!!sales_person})`)
-        skippedCount++
+      if (!client_name || !meeting_date || !sales_person || !transcript || !closed || !client_email || !client_phone_number) {
+        console.log(`[Upload] Line ${i}: Skipping - missing required fields`)
         continue
       }
 
-      const closedBoolean = closed === "1" || closed === "true"
-
-      try {
-        const result = await sql`
-          INSERT INTO meetings (client_name, client_email, client_phone_number, meeting_date, sales_person, closed, transcript, processed)
-          VALUES (${client_name}, ${client_email || null}, ${client_phone_number || null}, ${meeting_date}, ${sales_person}, ${closedBoolean}, ${transcript || null}, false)
-          RETURNING id
-        `
-        console.log(`[Upload] Line ${i}: Successfully inserted with id:`, result[0]?.id)
-        uploadedCount++
-      } catch (insertError) {
-        console.error(`[Upload] Line ${i}: Insert error:`, insertError)
-        skippedCount++
-      }
+      const meetingData = parseCSVLine(values)
+      meetingsToProcess.push(meetingData)
     }
 
-    console.log(`[Upload] Final: uploaded=${uploadedCount}, skipped=${skippedCount}`)
+    const result = await processMeetingsUpload(meetingsToProcess)
+
+    console.log(`[Upload] Final: uploaded=${result.uploadedCount}, skipped=${result.skippedCount}`)
 
     return NextResponse.json({
       success: true,
-      message: `Successfully uploaded ${uploadedCount} meetings (${skippedCount} skipped)`,
+      message: `Successfully uploaded ${result.uploadedCount} meetings (${result.skippedCount} skipped)`,
     })
   } catch (error) {
-    console.error("[v0] Upload error:", error)
+    console.error("Upload error:", error)
     return NextResponse.json({ error: "Failed to upload CSV" }, { status: 500 })
   }
 }

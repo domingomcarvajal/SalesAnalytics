@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { TrendingUp, Users, Target, Loader2, Building2, User, Zap, Crosshair, Settings, AlertTriangle } from "lucide-react"
+import { TrendingUp, Users, Target, Loader2, Building2, User, AlertTriangle, Settings } from "lucide-react"
 import { AnalyticsFilters } from "./analytics-filters"
 import { ExportButton } from "./export-button"
+import { HorizontalBarChart } from "./horizontal-bar-chart"
+import { PercentageBarChart } from "./percentage-bar-chart"
 
 type SalespersonStat = {
   sales_person: string
@@ -46,6 +48,7 @@ type Filters = {
   salespeople: string[]
   closedStatuses: string[]
   industries: Array<{ id: number; name: string }>
+  processedStatuses: string[]
 }
 
 const COLORS = {
@@ -59,6 +62,15 @@ const COLORS = {
 }
 
 const MAX_LABELS = 5
+
+function calculateDomain(data: any[], dataKey: string) {
+  if (!data || data.length === 0) return [0, 10]
+
+  const values = data.map(item => Number(item[dataKey]) || 0)
+  const max = Math.max(...values)
+
+  return [0, Math.ceil(max * 1.1)] // Add 10% padding
+}
 
 function MetricSkeleton() {
   return <div className="h-8 w-16 bg-muted animate-pulse rounded" />
@@ -108,6 +120,7 @@ export function AnalyticsDashboard() {
   const [selectedSalesperson, setSelectedSalesperson] = useState("all")
   const [selectedClosed, setSelectedClosed] = useState("all")
   const [selectedIndustryId, setSelectedIndustryId] = useState("all")
+  const [selectedProcessed, setSelectedProcessed] = useState("all")
 
   useEffect(() => {
     fetchFilters()
@@ -115,7 +128,7 @@ export function AnalyticsDashboard() {
 
   useEffect(() => {
     fetchAnalytics()
-  }, [selectedSalesperson, selectedClosed, selectedIndustryId])
+  }, [selectedSalesperson, selectedClosed, selectedIndustryId, selectedProcessed])
 
   const fetchFilters = async () => {
     try {
@@ -123,7 +136,7 @@ export function AnalyticsDashboard() {
       const data = await response.json()
       setFilters(data)
     } catch (error) {
-      console.error("[v0] Failed to fetch filters:", error)
+      console.error("Failed to fetch filters:", error)
     }
   }
 
@@ -137,12 +150,13 @@ export function AnalyticsDashboard() {
       if (selectedSalesperson !== "all") params.append("salesperson", selectedSalesperson)
       if (selectedClosed !== "all") params.append("closed", selectedClosed)
       if (selectedIndustryId !== "all") params.append("industryId", selectedIndustryId)
+      if (selectedProcessed !== "all") params.append("processed", selectedProcessed)
 
       const response = await fetch(`/api/analytics?${params.toString()}`)
       const data = await response.json()
       setAnalytics(data)
     } catch (error) {
-      console.error("[v0] Failed to fetch analytics:", error)
+      console.error("Failed to fetch analytics:", error)
     } finally {
       setInitialLoading(false)
       setRefreshing(false)
@@ -153,6 +167,7 @@ export function AnalyticsDashboard() {
     setSelectedSalesperson("all")
     setSelectedClosed("all")
     setSelectedIndustryId("all")
+    setSelectedProcessed("all")
   }
 
   if (initialLoading && !analytics) {
@@ -175,17 +190,20 @@ export function AnalyticsDashboard() {
       <AnalyticsFilters
         filters={filters}
         selectedSalesperson={selectedSalesperson}
-          selectedClosed={selectedClosed}
-          selectedIndustryId={selectedIndustryId}
+        selectedClosed={selectedClosed}
+        selectedIndustryId={selectedIndustryId}
+        selectedProcessed={selectedProcessed}
         onSalespersonChange={setSelectedSalesperson}
-          onClosedChange={setSelectedClosed}
-          onIndustryChange={setSelectedIndustryId}
+        onClosedChange={setSelectedClosed}
+        onIndustryChange={setSelectedIndustryId}
+        onProcessedChange={setSelectedProcessed}
         onReset={handleReset}
-        />
+      />
         <ExportButton
           selectedSalesperson={selectedSalesperson}
           selectedClosed={selectedClosed}
           selectedIndustryId={selectedIndustryId}
+          selectedProcessed={selectedProcessed}
         />
       </div>
 
@@ -242,7 +260,11 @@ export function AnalyticsDashboard() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={analytics?.salespersonStats ?? []} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" />
+                  <XAxis
+                    type="number"
+                    domain={calculateDomain(analytics?.salespersonStats ?? [], 'total')}
+                    allowDecimals={false}
+                  />
                   <YAxis dataKey="sales_person" type="category" width={showSalespersonLabels ? 80 : 10} tick={showSalespersonLabels ? { fontSize: 12 } : false} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Bar dataKey="total" fill={COLORS.total} radius={[0, 4, 4, 0]} />
@@ -254,7 +276,11 @@ export function AnalyticsDashboard() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={analytics?.salespersonStats ?? []} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" />
+                  <XAxis
+                    type="number"
+                    domain={calculateDomain(analytics?.salespersonStats ?? [], 'closed')}
+                    allowDecimals={false}
+                  />
                   <YAxis dataKey="sales_person" type="category" width={showSalespersonLabels ? 80 : 10} tick={showSalespersonLabels ? { fontSize: 12 } : false} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Bar dataKey="closed" fill={COLORS.closed} radius={[0, 4, 4, 0]} />
@@ -297,7 +323,11 @@ export function AnalyticsDashboard() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={analytics?.industryStats ?? []} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" />
+                  <XAxis
+                    type="number"
+                    domain={calculateDomain(analytics?.industryStats ?? [], 'total')}
+                    allowDecimals={false}
+                  />
                   <YAxis dataKey="industry" type="category" width={showIndustryLabels ? 100 : 10} tick={showIndustryLabels ? { fontSize: 12 } : false} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Bar dataKey="total" fill={COLORS.total} radius={[0, 4, 4, 0]} />
@@ -309,7 +339,11 @@ export function AnalyticsDashboard() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={analytics?.industryStats ?? []} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" />
+                  <XAxis
+                    type="number"
+                    domain={calculateDomain(analytics?.industryStats ?? [], 'closed')}
+                    allowDecimals={false}
+                  />
                   <YAxis dataKey="industry" type="category" width={showIndustryLabels ? 100 : 10} tick={showIndustryLabels ? { fontSize: 12 } : false} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Bar dataKey="closed" fill={COLORS.closed} radius={[0, 4, 4, 0]} />
@@ -363,86 +397,35 @@ export function AnalyticsDashboard() {
 
       {/* Insights Grid: Triggers, Objectives, Requirements */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Triggers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Zap className="h-4 w-4" />
-              Triggers de Descubrimiento
-            </CardTitle>
-            <CardDescription className="text-xs">Cómo nos encontraron (%)</CardDescription>
-          </CardHeader>
-          <CardContent className="relative">
-            {refreshing && <ChartLoadingOverlay />}
-            {(analytics?.triggerStats ?? []).length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={addPercentages(analytics?.triggerStats ?? [], analytics?.totalMeetings ?? 0)} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 'auto']} tickFormatter={(v) => `${v}%`} />
-                  <YAxis dataKey="trigger" type="category" width={100} tick={{ fontSize: 10 }} />
-                  <Tooltip content={<CustomBarTooltip suffix="%" />} />
-                  <Bar dataKey="percentage" fill={COLORS.triggers} radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[180px] text-muted-foreground text-sm">Sin datos</div>
-            )}
-          </CardContent>
-        </Card>
+        <PercentageBarChart
+          title="Triggers de Descubrimiento"
+          description="Cómo nos encontraron (%)"
+          icon={TrendingUp}
+          data={addPercentages(analytics?.triggerStats ?? [], analytics?.totalMeetings ?? 0)}
+          dataKey="percentage"
+          categoryKey="trigger"
+          color={COLORS.triggers}
+        />
 
-        {/* Objectives */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Crosshair className="h-4 w-4" />
-              Objetivos Principales
-            </CardTitle>
-            <CardDescription className="text-xs">Qué buscan lograr (%)</CardDescription>
-          </CardHeader>
-          <CardContent className="relative">
-            {refreshing && <ChartLoadingOverlay />}
-            {(analytics?.objectiveStats ?? []).length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={addPercentages(analytics?.objectiveStats ?? [], analytics?.totalMeetings ?? 0)} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 'auto']} tickFormatter={(v) => `${v}%`} />
-                  <YAxis dataKey="objective" type="category" width={120} tick={{ fontSize: 10 }} />
-                  <Tooltip content={<CustomBarTooltip suffix="%" />} />
-                  <Bar dataKey="percentage" fill={COLORS.objectives} radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[180px] text-muted-foreground text-sm">Sin datos</div>
-            )}
-          </CardContent>
-        </Card>
+        <PercentageBarChart
+          title="Objetivos Principales"
+          description="Qué buscan lograr (%)"
+          icon={Target}
+          data={addPercentages(analytics?.objectiveStats ?? [], analytics?.totalMeetings ?? 0)}
+          dataKey="percentage"
+          categoryKey="objective"
+          color={COLORS.objectives}
+        />
 
-        {/* Requirements */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Settings className="h-4 w-4" />
-              Requerimientos Técnicos
-            </CardTitle>
-            <CardDescription className="text-xs">Integraciones necesarias (%)</CardDescription>
-          </CardHeader>
-          <CardContent className="relative">
-            {refreshing && <ChartLoadingOverlay />}
-            {(analytics?.requirementStats ?? []).length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={addPercentages(analytics?.requirementStats ?? [], analytics?.totalMeetings ?? 0)} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 'auto']} tickFormatter={(v) => `${v}%`} />
-                  <YAxis dataKey="requirement" type="category" width={110} tick={{ fontSize: 10 }} />
-                  <Tooltip content={<CustomBarTooltip suffix="%" />} />
-                  <Bar dataKey="percentage" fill={COLORS.requirements} radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[180px] text-muted-foreground text-sm">Sin datos</div>
-            )}
-          </CardContent>
-        </Card>
+        <PercentageBarChart
+          title="Requerimientos Técnicos"
+          description="Integraciones necesarias (%)"
+          icon={Settings}
+          data={addPercentages(analytics?.requirementStats ?? [], analytics?.totalMeetings ?? 0)}
+          dataKey="percentage"
+          categoryKey="requirement"
+          color={COLORS.requirements}
+        />
       </div>
 
       {/* Placeholder for future sections */}
