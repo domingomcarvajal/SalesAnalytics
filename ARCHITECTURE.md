@@ -11,13 +11,9 @@ KampAI es una aplicación web para el análisis de reuniones de ventas que utili
 **Decisión**: Utilizar Next.js como framework principal de la aplicación.
 
 **Razones**:
-- **Compatibilidad con LLMs**: Next.js facilita la integración con APIs de IA (OpenAI, Groq) a través de su sistema de API routes
 - **Desarrollo inicial rápido**: Permite crear tanto frontend como backend en un solo proyecto
 - **Vercel Integration**: Despliegue nativo y optimizado en Vercel
 - **App Router**: Sistema de routing moderno y eficiente
-
-**Alternativas consideradas**:
-- **Express + React**: Requeriría mantener dos repositorios separados
 
 ### Base de Datos: Neon
 
@@ -29,7 +25,7 @@ KampAI es una aplicación web para el análisis de reuniones de ventas que utili
 - **Integración con Vercel**: Conexiones optimizadas
 
 **Alternativas consideradas**:
-- **Supabase**: Menor conocimiento por parte del equipo
+- **Supabase**: Menor conocimiento por parte del equipo de desarrollo
 
 ### Despliegue: Vercel
 
