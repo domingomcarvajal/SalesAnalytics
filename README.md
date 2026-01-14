@@ -68,3 +68,13 @@ Abre [http://localhost:3000](http://localhost:3000) para ver la aplicación.
 1. **Subir Datos** (`/upload`) - Sube archivos CSV con datos de reuniones
 2. **Procesar** (`/process`) - Ejecuta análisis de IA en las transcripciones usando Groq para extraer insights
 3. **Dashboard** (`/`) - Visualiza analytics con filtros e visualizaciones
+
+## Supuestos del Sistema
+
+Esta aplicación se basa en los siguientes supuestos:
+
+1. **Enfoque en métricas generales**: No es necesario implementar una vista detallada para ver cada reunión individual con sus dolores específicos, ya que la plataforma está diseñada para proporcionar métricas generales y análisis agregados, no vistas específicas de reuniones individuales.
+
+2. **Panel de administración existente**: Se asume que en una aplicación más completa ya existirá un panel de administración separado para visualizar y modificar manualmente los datos de la base de datos.
+
+3. **Formato de datos válido**: Los archivos CSV subidos contienen datos en el formato correcto especificado, sin necesidad de validación adicional o limpieza de datos.
