@@ -40,9 +40,9 @@ Continue building your app on:
 ### Environment Variables
 
 1. Copy the example environment file:
-   ```bash
+   \`\`\`bash
    cp .env.local.example .env.local
-   ```
+   \`\`\`
 
 2. Fill in your actual values in `.env.local`:
    - `DATABASE_URL`: Get this from your [Neon dashboard](https://console.neon.tech)
@@ -71,10 +71,10 @@ The application expects CSV files with the following columns:
 
 ### Running Locally
 
-```bash
+\`\`\`bash
 npm install
 npm run dev
-```
+\`\`\`
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
